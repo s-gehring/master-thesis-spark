@@ -1,0 +1,42 @@
+version: '2.3'
+services:
+  master:
+    image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
+    ports:
+    - 8000:6066
+    - 8001:7077
+    - 8002:8080
+    command: ["/start-master.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "localhost:8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 2
+  slave-one:
+    image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
+    ports:
+    - 8003:8081
+    command: ["/start-slave.sh", "--memory", "1G", "--cores", "2", "spark://master:7077"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "localhost:8081"]
+      interval: 10s
+      timeout: 5s
+      retries: 2
+  slave-two:
+    image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
+    ports:
+    - 8004:8081
+    command: ["/start-slave.sh", "--memory", "1G", "--cores", "2", "spark://master:7077"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "localhost:8081"]
+      interval: 10s
+      timeout: 5s
+      retries: 2
+  submitter:
+    image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
+    command: ["spark-submit", "-v", "--master", "spark://master:6066", "--deploy-mode", "cluster", "--class", "org.apache.spark.examples.JavaSparkPi", "/spark/examples/jars/spark-examples_2.11-2.3.0.jar", "100"]
+    ports:
+    - 8005:4040
+    depends_on:
+      master:
+        condition: service_healthy
