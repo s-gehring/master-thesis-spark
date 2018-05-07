@@ -19,15 +19,30 @@ RUN mv /spark/spark-*-bin-hadoop2.7/* /spark/
 RUN rm -rf /spark/spark-*-bin-hadoop2.7
 
 ENV PATH="${PATH}:/spark/bin"
+ENV SPARK_WORKER_PORT=5000
+ENV SPARK_MASTER_WEBUI_PORT=8080
+ENV SPARK_WORKER_WEBUI_PORT=8080
+
+### Configure Spark
+
+COPY spark-defaults.conf /spark/conf/spark-defaults.conf
 
 ### Expose ports.
 
 # For Master
 EXPOSE 7077
-# For Master WebUI
+# For both WebUIs
 EXPOSE 8080
-# For Slave WebUI
-EXPOSE 8081
+# For Communication to Master
+EXPOSE 5000
+# For Cluster Manager WebUI
+EXPOSE 4040
+# For Cluster Manager History Server
+EXPOSE 18080
+# For Cluster Manager Executor
+EXPOSE 5001
+# For Cluster Manager Driver
+EXPOSE 5002
 
 ### Add custom scripts.
 
@@ -35,12 +50,9 @@ COPY start-master-tailing.sh /start-master.sh
 COPY start-slave-tailing.sh /start-slave.sh
 
 ### Healthcheck
-# Disabled, since spark doesn't always provide the UI
-# at the same ports. The healthcheck should be
-# done on docker-compose level.
 
-# HEALTHCHECK \
-#   --retries=2 \
-#   --timeout=5s \
-#   --interval=10s \
-#   curl -f localhost:8080 || curl -f localhost:8081
+HEALTHCHECK \
+   --retries=2 \
+   --timeout=5s \
+   --interval=10s \
+   CMD curl -f localhost:8080

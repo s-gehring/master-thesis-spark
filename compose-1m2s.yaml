@@ -2,10 +2,15 @@ version: '2.3'
 services:
   master:
     image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
+    build: .
     ports:
-    - 8000:6066
-    - 8001:7077
-    - 8002:8080
+    - 2000:7077  # Submit job to cluster / Join cluster
+    - 2001:8080  # WebUI
+    - 2002:5000  # Schedule Executors
+    - 2003:5001  # Cluster Manager Executor
+    - 2004:5002  # Cluster Manager Driver
+    - 2005:4040  # Cluster Manager WebUI
+    - 2006:18080 # Cluster Manager History Server
     command: ["/start-master.sh"]
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8080"]
@@ -14,9 +19,10 @@ services:
       retries: 2
   slave-one:
     image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
+    build: .
     ports:
-    - 8003:8081
-    command: ["/start-slave.sh", "--memory", "1G", "--cores", "2", "spark://master:7077"]
+    - 8003:8080
+    command: ["/start-slave.sh", "--memory", "8G", "--cores", "4", "spark://master:7077"]
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -24,19 +30,31 @@ services:
       retries: 2
   slave-two:
     image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
+    build: .
     ports:
-    - 8004:8081
-    command: ["/start-slave.sh", "--memory", "1G", "--cores", "2", "spark://master:7077"]
+    - 8004:8080
+    command: ["/start-slave.sh", "--memory", "8G", "--cores", "4", "spark://master:7077"]
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
       timeout: 5s
       retries: 2
-  submitter:
-    image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
-    command: ["spark-submit", "-v", "--master", "spark://master:6066", "--deploy-mode", "cluster", "--class", "org.apache.spark.examples.JavaSparkPi", "/spark/examples/jars/spark-examples_2.11-2.3.0.jar", "100"]
+#  submitter:
+#    image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
+#    build: .
+#    command: ["spark-submit", "-v", "--master", "spark://master:6066", "--deploy-mode", "cluster", "--class", "sparktest.TestCasSerialization", "http://jar-provider/sparktest-0.0.1-SNAPSHOT.jar", "100"]
+#    ports:
+#    - 8005:4040
+#    depends_on:
+#      master:
+#        condition: service_healthy
+#      jar-provider:
+#        condition: service_healthy
+  jar-provider:
+    image: httpd:alpine
     ports:
-    - 8005:4040
-    depends_on:
-      master:
-        condition: service_healthy
+    - 8006:80
+    volumes:
+    - "$PWD/jars:/usr/local/apache2/htdocs"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "-O", "-", "-T", "1", "localhost"]
