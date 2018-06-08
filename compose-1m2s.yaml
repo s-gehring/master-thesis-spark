@@ -22,7 +22,7 @@ services:
     build: .
     ports:
     - 8003:8080
-    command: ["/start-slave.sh", "--memory", "8G", "--cores", "4", "spark://master:7077"]
+    command: ["/start-slave.sh", "--memory", "32G", "--cores", "4", "spark://master:7077"]
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -33,7 +33,7 @@ services:
     build: .
     ports:
     - 8004:8080
-    command: ["/start-slave.sh", "--memory", "8G", "--cores", "4", "spark://master:7077"]
+    command: ["/start-slave.sh", "--memory", "32G", "--cores", "4", "spark://master:7077"]
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -58,3 +58,12 @@ services:
     - "$PWD/jars:/usr/local/apache2/htdocs"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "-O", "-", "-T", "1", "localhost"]
+  document-provider:
+    image: httpd:alpine
+    ports:
+    - 8007:80
+    volumes:
+    - "$PWD/documents:/usr/local/apache2/htdocs"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "-O", "-", "-T", "1", "localhost"]
+
