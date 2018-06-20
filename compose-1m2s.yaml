@@ -12,6 +12,8 @@ services:
     - 2005:4040  # Cluster Manager WebUI
     - 2006:18080 # Cluster Manager History Server
     command: ["/start-master.sh"]
+    volumes:
+    - "$PWD/logs/master:/spark/logs"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8080"]
       interval: 10s
@@ -23,6 +25,9 @@ services:
     ports:
     - 8003:8080
     command: ["/start-slave.sh", "--memory", "2G", "--cores", "2", "spark://master:7077"]
+    volumes:
+    - "$PWD/logs/slave-one:/spark/logs"
+    - "$PWD/logs/slave-one/workspace:/spark/work"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -33,7 +38,10 @@ services:
     build: .
     ports:
     - 8004:8080
-    command: ["/start-slave.sh", "--memory", "2G", "--cores", "4", "spark://master:7077"]
+    command: ["/start-slave.sh", "--memory", "6G", "--cores", "4", "spark://master:7077"]
+    volumes:
+    - "$PWD/logs/slave-two:/spark/logs"
+    - "$PWD/logs/slave-two/workspace:/spark/work"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -66,3 +74,9 @@ services:
     - "$PWD/documents:/usr/local/apache2/htdocs"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "-O", "-", "-T", "1", "localhost"]
+  log-catcher:
+    image: srv-builder.fkie.fraunhofer.de:18006/gehring-log-catcher:0.0.1-SNAPSHOT
+    build: ./log-catcher
+    volumes:
+    - "$PWD/logs/log-catcher:/var/log-catcher/logs"
+    
