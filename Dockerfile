@@ -23,6 +23,9 @@ ENV SPARK_WORKER_PORT=5000
 ENV SPARK_MASTER_WEBUI_PORT=8080
 ENV SPARK_WORKER_WEBUI_PORT=8080
 
+ENV SPARK_LOG_DIR="/spark/logs"
+ENV SPARK_WORKER_DIR="/spark/work"
+
 ### Configure Spark
 
 COPY spark-defaults.conf /spark/conf/spark-defaults.conf
