@@ -22,7 +22,7 @@ services:
     build: .
     ports:
     - 8003:8080
-    command: ["/start-slave.sh", "--memory", "32G", "--cores", "4", "spark://master:7077"]
+    command: ["/start-slave.sh", "--memory", "2G", "--cores", "2", "spark://master:7077"]
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -33,7 +33,7 @@ services:
     build: .
     ports:
     - 8004:8080
-    command: ["/start-slave.sh", "--memory", "32G", "--cores", "4", "spark://master:7077"]
+    command: ["/start-slave.sh", "--memory", "2G", "--cores", "4", "spark://master:7077"]
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -42,7 +42,7 @@ services:
   submitter:
     image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
     build: .
-    command: ["spark-submit", "-v", "--master", "spark://master:6066", "--driver-memory", "12G", "--deploy-mode", "cluster", "--class", "sparktest.example.ExamplePipelineProcessor", "http://jar-provider/sparktest-0.0.1-SNAPSHOT.jar", "100"]
+    command: ["spark-submit", "-v", "--master", "spark://master:6066", "--driver-memory", "2G", "--deploy-mode", "cluster", "--class", "sparktest.example.ExamplePipelineProcessor", "http://jar-provider/sparktest-0.0.1-SNAPSHOT.jar", "100"]
     ports:
     - 8005:4040
     depends_on:
