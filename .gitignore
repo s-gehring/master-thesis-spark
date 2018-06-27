@@ -3,3 +3,4 @@ documents/**
 jars/**
 logs/**
 /log-catcher/.settings
+.classpath
