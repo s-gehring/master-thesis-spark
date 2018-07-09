@@ -38,7 +38,7 @@ services:
     build: .
     #ports:
     #- 8004:8080
-    command: ["/start-slave.sh", "--memory", "2G", "--cores", "1", "spark://master:7077"]
+    command: ["/start-slave.sh", "--memory", "10G", "--cores", "1", "spark://master:7077"]
     volumes:
     - "$PWD/logs/slave-two:/spark/logs"
     - "$PWD/logs/slave-two/workspace:/spark/work"
@@ -50,7 +50,7 @@ services:
   submitter:
     image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
     build: .
-    command: ["spark-submit", "-v", "--master", "spark://master:6066", "--driver-memory", "12G", "--deploy-mode", "cluster", "--class", "sparktest.example.ExamplePipelineProcessor", "http://jar-provider/sparktest-0.0.1-SNAPSHOT.jar", "100"]
+    command: ["spark-submit", "-v", "--master", "spark://master:6066", "--driver-memory", "12G", "--deploy-mode", "cluster", "--class", "gehring.uima.examples.ExamplePipelineProcessor", "http://jar-provider/shared-uima-benchmark-0.0.1-SNAPSHOT.jar", "100"]
     ports:
     - 8005:4040
     depends_on:
@@ -74,8 +74,4 @@ services:
     - "$PWD/documents:/usr/local/apache2/htdocs"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "-O", "-", "-T", "1", "localhost"]
-  log-catcher:
-    image: srv-builder.fkie.fraunhofer.de:18006/gehring-log-catcher:0.0.1-SNAPSHOT
-    build: ./log-catcher
-    volumes:
-    - "$PWD/logs/log-catcher:/var/log-catcher/logs"
+  
