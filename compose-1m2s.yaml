@@ -13,7 +13,7 @@ services:
     - 2006:18080 # Cluster Manager History Server
     command: ["/start-master.sh"]
     volumes:
-    - "$PWD/logs/master:/spark/logs"
+    - "$PWD/logs/${SUP_LOG_FILES-./}master:/spark/logs"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8080"]
       interval: 10s
@@ -26,8 +26,8 @@ services:
     #- 8003:8080
     command: ["/start-slave.sh", "--memory", "16G", "--cores", "2", "spark://master:7077"]
     volumes:
-    - "$PWD/logs/slave-one:/spark/logs"
-    - "$PWD/logs/slave-one/workspace:/spark/work"
+    - "$PWD/logs/${SUP_LOG_FILES-./}slave-one:/spark/logs"
+    - "$PWD/logs/${SUP_LOG_FILES-./}slave-one/workspace:/spark/work"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -40,8 +40,8 @@ services:
     #- 8004:8080
     command: ["/start-slave.sh", "--memory", "10G", "--cores", "1", "spark://master:7077"]
     volumes:
-    - "$PWD/logs/slave-two:/spark/logs"
-    - "$PWD/logs/slave-two/workspace:/spark/work"
+    - "$PWD/logs/${SUP_LOG_FILES-./}slave-two:/spark/logs"
+    - "$PWD/logs/${SUP_LOG_FILES-./}slave-two/workspace:/spark/work"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -50,7 +50,7 @@ services:
   submitter:
     image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
     build: .
-    command: ["spark-submit", "-v", "--master", "spark://master:6066", "--driver-memory", "12G", "--deploy-mode", "cluster", "--class", "gehring.uima.examples.ExamplePipelineProcessor", "http://jar-provider/shared-uima-benchmark-0.0.1-SNAPSHOT.jar", "100"]
+    command: ["spark-submit", "-v", "--master", "spark://master:6066", "--driver-memory", "12G", "--deploy-mode", "cluster", "--class", "gehring.uima.examples.ExamplePipelineProcessor", "http://jar-provider/shared-uima-benchmark-0.0.1-SNAPSHOT.jar", "-c", "${SUP_COMPRESSION_ALGORITHM:-gehring.uima.distributed.compression.NoCompression}", "-d", "${SUP_GUTENBERG_RATIO:-1.0}"]
     ports:
     - 8005:4040
     depends_on:
@@ -74,4 +74,3 @@ services:
     - "$PWD/documents:/usr/local/apache2/htdocs"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "-O", "-", "-T", "1", "localhost"]
-  
