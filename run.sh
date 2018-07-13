@@ -2,7 +2,9 @@
 
 set -e
 
-TIMEOUT=$((10))
+TIMEOUT_HOURS=8
+
+TIMEOUT=$((60*60*$TIMEOUT_HOURS))
 COMPRESSION_LOGS=with-compression/
 NO_COMPRESSION_LOGS=without-compression/
 
@@ -15,12 +17,7 @@ function countdown(){
    done
 }
 
-echo "Deleting old logfiles..."
-sudo rm -rf logs
-mkdir logs
-mkdir logs/build
-
-
+echo "Starting script. It is now $(date)."
 
 
 echo "Building shared-uima-processor..."
@@ -41,13 +38,20 @@ echo "Removing old containers (if applicable)."
 docker-compose -f compose-1m2s.yaml down --remove-orphans 1>logs/init-docker-compose-down.stdout.log \
 2>logs/init-docker-compose-down.stderr.log
 
+
+echo "Deleting old logfiles..."
+sudo rm -rf logs
+mkdir logs
+mkdir logs/build
+
+
 echo "Starting benchmark with compression..."
-SUP_COMPRESSION_ALGORITHM=gehring.uima.distributed.compression.ZLib
-SUP_LOG_FILES=$COMPRESSION_LOGS
+export SUP_COMPRESSION_ALGORITHM=gehring.uima.distributed.compression.ZLib
+export SUP_LOG_FILES=$COMPRESSION_LOGS
 docker-compose -f compose-1m2s.yaml up --scale slave-two=11 -d 1>logs/compression-docker-compose-up.stdout.log \
 2>logs/compression-docker-compose-up.stderr.log
 
-echo "Successfully started benchmark. Wait for 12 hours..."
+echo "Successfully started benchmark. Wait for $TIMEOUT_HOURS hours..."
 
 countdown $TIMEOUT
 
@@ -59,12 +63,12 @@ echo "Removing useless JAR files..."
 sudo find logs -name \*.jar -delete
 
 echo "Starting benchmark without compression..."
-SUP_COMPRESSION_ALGORITHM=gehring.uima.distributed.compression.NoCompression
-SUP_LOG_FILES=$NO_COMPRESSION_LOGS
+export SUP_COMPRESSION_ALGORITHM=gehring.uima.distributed.compression.NoCompression
+export SUP_LOG_FILES=$NO_COMPRESSION_LOGS
 docker-compose -f compose-1m2s.yaml up --scale slave-two=11 -d 1>logs/no-compression-docker-compose-up.stdout.log \
 2>logs/no-compression-docker-compose-up.stderr.log
 
-echo "Successfully started benchmark. Wait for 12 hours..."
+echo "Successfully started benchmark. Wait for $TIMEOUT_HOURS hours..."
 countdown $TIMEOUT
 
 echo "Successfully waited (yay). Removing (hopefully) idling containers..."
@@ -75,12 +79,12 @@ echo "Removing useless JAR files..."
 sudo find logs -name \*.jar -delete
 
 echo "Retrieving log files..."
-OLD_WD=$(pwd)
-cd $COMPRESSION_LOGS/slave-one/workspace/driver*
+export OLD_WD=$(pwd)
+cd logs/${COMPRESSION_LOGS}slave-one/workspace/driver*
 cp stdout $OLD_WD/logs/stdout-with-compression.log
 cp stderr $OLD_WD/logs/stderr-with-compression.log
-cd OLD_WD
-cd $NO_COMPRESSION_LOGS/slave-one/workspace/driver*
+cd $OLD_WD
+cd logs/${NO_COMPRESSION_LOGS}slave-one/workspace/driver*
 cp stdout $OLD_WD/logs/stdout-without-compression.log
 cp stderr $OLD_WD/logs/stderr-without-compression.log
 cd $OLD_WD
@@ -91,4 +95,4 @@ egrep -v "INFO|WARN" logs/stderr-with-compression.log > logs/stderr-with-compres
 egrep -v "INFO|WARN" logs/stdout-without-compression.log > logs/stdout-without-compression.min.log
 egrep -v "INFO|WARN" logs/stderr-without-compression.log > logs/stderr-without-compression.min.log
 
-echo "Done c:"
+echo "Done with the script. It is now $(date)."
