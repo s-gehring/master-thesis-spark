@@ -13,7 +13,7 @@ services:
     - 2006:18080 # Cluster Manager History Server
     command: ["/start-master.sh"]
     volumes:
-    - "$PWD/logs/${SUP_LOG_FILES-./}master:/spark/logs"
+    - "$PWD/logs/${SUP_LOG_FILES:-./}master:/spark/logs"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8080"]
       interval: 10s
@@ -26,8 +26,8 @@ services:
     #- 8003:8080
     command: ["/start-slave.sh", "--memory", "16G", "--cores", "2", "spark://master:7077"]
     volumes:
-    - "$PWD/logs/${SUP_LOG_FILES-./}slave-one:/spark/logs"
-    - "$PWD/logs/${SUP_LOG_FILES-./}slave-one/workspace:/spark/work"
+    - "$PWD/logs/${SUP_LOG_FILES:-./}slave-one:/spark/logs"
+    - "$PWD/logs/${SUP_LOG_FILES:-./}slave-one/workspace:/spark/work"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -40,8 +40,8 @@ services:
     #- 8004:8080
     command: ["/start-slave.sh", "--memory", "10G", "--cores", "1", "spark://master:7077"]
     volumes:
-    - "$PWD/logs/${SUP_LOG_FILES-./}slave-two:/spark/logs"
-    - "$PWD/logs/${SUP_LOG_FILES-./}slave-two/workspace:/spark/work"
+    - "$PWD/logs/${SUP_LOG_FILES}slave-two:/spark/logs"
+    - "$PWD/logs/${SUP_LOG_FILES:-./}slave-two/workspace:/spark/work"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
