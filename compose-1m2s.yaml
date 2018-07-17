@@ -24,7 +24,7 @@ services:
     build: .
     #ports:
     #- 8003:8080
-    command: ["/start-slave.sh", "--memory", "16G", "--cores", "2", "spark://master:7077"]
+    command: ["/start-slave.sh", "--memory", "${MEMORY_OF_SLAVE_MASTER:-12G}", "--cores", "${CORES_OF_SLAVE_MASTER:-2}", "spark://master:7077"]
     volumes:
     - "$PWD/logs/${SUP_LOG_FILES:-./}slave-one:/spark/logs"
     - "$PWD/logs/${SUP_LOG_FILES:-./}slave-one/workspace:/spark/work"
@@ -38,7 +38,7 @@ services:
     build: .
     #ports:
     #- 8004:8080
-    command: ["/start-slave.sh", "--memory", "10G", "--cores", "1", "spark://master:7077"]
+    command: ["/start-slave.sh", "--memory", "${MEMORY_PER_MACHINE}", "--cores", "${CORES_PER_MACHINE}", "spark://master:7077"]
     volumes:
     - "$PWD/logs/${SUP_LOG_FILES}slave-two:/spark/logs"
     - "$PWD/logs/${SUP_LOG_FILES:-./}slave-two/workspace:/spark/work"
@@ -50,7 +50,23 @@ services:
   submitter:
     image: srv-builder.fkie.fraunhofer.de:18006/gehring-master-spark:0.0.1-SNAPSHOT
     build: .
-    command: ["spark-submit", "-v", "--master", "spark://master:6066", "--driver-memory", "12G", "--deploy-mode", "cluster", "--class", "gehring.uima.examples.ExamplePipelineProcessor", "http://jar-provider/shared-uima-benchmark-0.0.1-SNAPSHOT.jar", "-c", "${SUP_COMPRESSION_ALGORITHM:-gehring.uima.distributed.compression.NoCompression}", "-d", "${SUP_GUTENBERG_RATIO:-1.0}"]
+    command:
+    - "spark-submit"
+    - "-v"
+    - "--master"
+    - "spark://master:6066"
+    - "--driver-memory"
+    - "12G"
+    - "--deploy-mode"
+    - "cluster"
+    - "--class"
+    - "gehring.uima.examples.ExamplePipelineProcessor"
+    - "http://jar-provider/shared-uima-benchmark-0.0.1-SNAPSHOT.jar"
+    - "-c"
+    - "${SUP_COMPRESSION_ALGORITHM:-gehring.uima.distributed.compression.NoCompression}"
+    - "-d"
+    - "${SUP_GUTENBERG_RATIO:-1.0}"
+    - "${SUP_SINGLE_INSTANCE}"
     ports:
     - 8005:4040
     depends_on:
