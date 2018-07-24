@@ -1,15 +1,37 @@
 #!/bin/bash
 
+
 set -e
 
-TIMEOUT_HOURS=8
+if [ -z "$TIMEOUT_HOURS" ]; then
+  echo "No timeout specified. Defaulting to 6 hours."
+  TIMEOUT_HOURS=6
+else
+  echo "Understood minimum filesize of $FILESIZE_MIN Bytes."
+fi
+
+
+if [ -z "$FILESIZE_MIN" ]; then
+  echo "No minimum filesize specified."
+else
+  echo "Understood minimum filesize of $FILESIZE_MIN Bytes."
+fi
+if [ -z "$FILESIZE_MAX" ]; then
+  echo "No maximum filesize specified."
+else
+  echo "Understood maximum filesize of $FILESIZE_MAX Bytes."
+fi
+
 
 TIMEOUT=$((60*60*$TIMEOUT_HOURS))
 
+
 # Number of workers (+1, the master slave)
-NUMBER_OF_MACHINES=11
-MEMORY_PER_MACHINE=10G
-CORES_PER_MACHINE=1
+export NUMBER_OF_MACHINES=11
+
+export MEMORY_PER_MACHINE_IN_GB=10
+
+export CORES_PER_MACHINE=1
 
 COMPRESSION_LOGS=with-compression/
 NO_COMPRESSION_LOGS=without-compression/
@@ -51,15 +73,8 @@ echo "Removing old containers (if applicable)."
 docker-compose -f compose-1m2s.yaml down --remove-orphans 1>logs/init-docker-compose-down.stdout.log \
 2>logs/init-docker-compose-down.stderr.log
 
-#echo "Starting benchmark UIMA-AS..."
-#export SUP_LOG_FILES=$UIMA_AS_LOGS
-#export SUP_SINGLE_INSTANCE=--uima-as
-#docker-compose -f compose-1m2s.yaml up --scale slave-two=0 -d 1>logs/uima-as-docker-compose-up.stdout.log \
-#2>logs/uima-as-docker-compose-up.stderr.log
 
-#exit(1)
-
-echo "Starting benchmark with compression..."
+echo "Starting benchmark with compression (logs at $COMPRESSION_LOGS, ${MEMORY_OF_SLAVE_MASTER:-12G} + ${NUMBER_OF_MACHINES}*${MEMORY_PER_MACHINE_IN_GB}G RAM and 1 + ${NUMBER_OF_MACHINES}*${CORES_PER_MACHINE} cores)"
 export SUP_COMPRESSION_ALGORITHM=gehring.uima.distributed.compression.ZLib
 export SUP_LOG_FILES=$COMPRESSION_LOGS
 docker-compose -f compose-1m2s.yaml up --scale slave-two=$NUMBER_OF_MACHINES -d 1>logs/compression-docker-compose-up.stdout.log \
@@ -75,7 +90,7 @@ docker-compose -f compose-1m2s.yaml down 1>logs/compression-docker-compose-down.
 echo "Removing useless JAR files..."
 sudo find logs -name \*.jar -delete
 
-echo "Starting benchmark without compression..."
+echo "Starting benchmark without compression (logs at $NO_COMPRESSION_LOGS, ${MEMORY_OF_SLAVE_MASTER:-12G} + ${NUMBER_OF_MACHINES}*${MEMORY_PER_MACHINE_IN_GB}G RAM and 1 + ${NUMBER_OF_MACHINES}*${CORES_PER_MACHINE} cores)"
 export SUP_COMPRESSION_ALGORITHM=gehring.uima.distributed.compression.NoCompression
 export SUP_LOG_FILES=$NO_COMPRESSION_LOGS
 docker-compose -f compose-1m2s.yaml up --scale slave-two=$NUMBER_OF_MACHINES -d 1>logs/no-compression-docker-compose-up.stdout.log \
@@ -91,11 +106,12 @@ docker-compose -f compose-1m2s.yaml down -v 1>logs/no-compression-docker-compose
 echo "Removing useless JAR files..."
 sudo find logs -name \*.jar -delete
 
-echo "Starting benchmark single instance..."
+
 export SUP_LOG_FILES=$SINGLE_LOGS
 export SUP_SINGLE_INSTANCE=--single
-export MEMORY_OF_SLAVE_MASTER=$(($MEMORY_PER_MACHINE*($NUMBER_OF_MACHINES+1)))
+export MEMORY_OF_SLAVE_MASTER=$(($MEMORY_PER_MACHINE_IN_GB*$(($NUMBER_OF_MACHINES+1))))G
 export CORES_OF_SLAVE_MASTER=$(($CORES_PER_MACHINE*($NUMBER_OF_MACHINES+1)))
+echo "Starting benchmark single instance (Log files at $SINGLE_LOGS, $MEMORY_OF_SLAVE_MASTER memory, $CORES_OF_SLAVE_MASTER cores)"
 docker-compose -f compose-1m2s.yaml up --scale slave-two=0 -d 1>logs/single-docker-compose-up.stdout.log \
 2>logs/single-docker-compose-up.stderr.log
 

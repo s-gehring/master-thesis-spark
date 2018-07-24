@@ -24,7 +24,7 @@ services:
     build: .
     #ports:
     #- 8003:8080
-    command: ["/start-slave.sh", "--memory", "${MEMORY_OF_SLAVE_MASTER:-12G}", "--cores", "${CORES_OF_SLAVE_MASTER:-2}", "spark://master:7077"]
+    command: ["/start-slave.sh", "--memory", "${MEMORY_OF_SLAVE_MASTER:-12G}", "--cores", "${CORES_OF_SLAVE_MASTER:-1}", "spark://master:7077"]
     volumes:
     - "$PWD/logs/${SUP_LOG_FILES:-./}slave-one:/spark/logs"
     - "$PWD/logs/${SUP_LOG_FILES:-./}slave-one/workspace:/spark/work"
@@ -38,7 +38,7 @@ services:
     build: .
     #ports:
     #- 8004:8080
-    command: ["/start-slave.sh", "--memory", "${MEMORY_PER_MACHINE}", "--cores", "${CORES_PER_MACHINE}", "spark://master:7077"]
+    command: ["/start-slave.sh", "--memory", "${MEMORY_PER_MACHINE_IN_GB}G", "--cores", "${CORES_PER_MACHINE}", "spark://master:7077"]
     volumes:
     - "$PWD/logs/${SUP_LOG_FILES}slave-two:/spark/logs"
     - "$PWD/logs/${SUP_LOG_FILES:-./}slave-two/workspace:/spark/work"
@@ -67,6 +67,10 @@ services:
     - "-d"
     - "${SUP_GUTENBERG_RATIO:-1.0}"
     - "${SUP_SINGLE_INSTANCE}"
+    - "--minSize"
+    - "${FILESIZE_MIN:-0}"
+    - "--maxSize"
+    - "${FILESIZE_MAX:--1}"
     ports:
     - 8005:4040
     depends_on:
