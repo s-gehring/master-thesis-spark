@@ -4,3 +4,5 @@ jars/**
 logs/**
 /log-catcher/.settings
 .classpath
+
+*.log
