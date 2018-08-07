@@ -1,6 +1,7 @@
 #!/bin/bash
 
 
+
 set -e
 
 if [ -z "$TIMEOUT_HOURS" ]; then
@@ -28,7 +29,7 @@ TIMEOUT=$((60*60*$TIMEOUT_HOURS))
 
 # Number of workers (+1, the master slave)
 export NUMBER_OF_MACHINES=11
-
+export DOCUMENT_DIR=/home/simon.gehring/git/master-thesis-spark/documents
 export MEMORY_PER_MACHINE_IN_GB=10
 
 export CORES_PER_MACHINE=1
