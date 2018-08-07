@@ -13,7 +13,7 @@ services:
     - 2006:18080 # Cluster Manager History Server
     command: ["/start-master.sh"]
     volumes:
-    - "$PWD/logs/${SUP_LOG_FILES:-./}master:/spark/logs"
+    - "${SUP_LOG_FILES:-/home/simon.gehring/master-logs/}master:/spark/logs"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8080"]
       interval: 10s
@@ -24,10 +24,10 @@ services:
     build: .
     #ports:
     #- 8003:8080
-    command: ["/start-slave.sh", "--memory", "${MEMORY_OF_SLAVE_MASTER:-12G}", "--cores", "${CORES_OF_SLAVE_MASTER:-1}", "spark://master:7077"]
+    command: ["/start-slave.sh", "--memory", "${MEMORY_OF_SLAVE_MASTER:-12}G", "--cores", "${CORES_OF_SLAVE_MASTER:-1}", "spark://master:7077"]
     volumes:
-    - "$PWD/logs/${SUP_LOG_FILES:-./}slave-one:/spark/logs"
-    - "$PWD/logs/${SUP_LOG_FILES:-./}slave-one/workspace:/spark/work"
+    - "${SUP_LOG_FILES:-~/logs/}slave-one:/spark/logs"
+    - "${SUP_LOG_FILES:-~/logs/}slave-one/workspace:/spark/work"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -40,8 +40,8 @@ services:
     #- 8004:8080
     command: ["/start-slave.sh", "--memory", "${MEMORY_PER_MACHINE_IN_GB}G", "--cores", "${CORES_PER_MACHINE}", "spark://master:7077"]
     volumes:
-    - "$PWD/logs/${SUP_LOG_FILES}slave-two:/spark/logs"
-    - "$PWD/logs/${SUP_LOG_FILES:-./}slave-two/workspace:/spark/work"
+    - "${SUP_LOG_FILES:-~/logs/}slave-two:/spark/logs"
+    - "${SUP_LOG_FILES:-~/logs/}slave-two/workspace:/spark/work"
     healthcheck:
       test: ["CMD", "curl", "-f", "localhost:8081"]
       interval: 10s
@@ -58,12 +58,14 @@ services:
     - "--driver-memory"
     - "12G"
     - "--deploy-mode"
-    - "cluster"
+    - "client"
     - "--class"
     - "gehring.uima.examples.ExamplePipelineProcessor"
     - "http://jar-provider/shared-uima-benchmark-0.0.1-SNAPSHOT.jar"
     - "-c"
     - "${SUP_COMPRESSION_ALGORITHM:-gehring.uima.distributed.compression.NoCompression}"
+    - "-s"
+    - "${SUP_SERIALIZER:-gehring.uima.distributed.serialization.XmiCasSerialization}"
     - "-d"
     - "${SUP_GUTENBERG_RATIO:-1.0}"
     - "${SUP_SINGLE_INSTANCE}"
@@ -71,6 +73,10 @@ services:
     - "${FILESIZE_MIN:-0}"
     - "--maxSize"
     - "${FILESIZE_MAX:--1}"
+    - "--pipelineId"
+    - "${SUP_PIPELINE_ID:-0}"
+    volumes:
+    - "${SUP_LOG_FILES:-~/logs/}submitter:/spark/logs"
     ports:
     - 8005:4040
     depends_on:
@@ -91,6 +97,6 @@ services:
     ports:
     - 8007:80
     volumes:
-    - "$PWD/documents:/usr/local/apache2/htdocs"
+    - "$DOCUMENT_DIR:/usr/local/apache2/htdocs"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "-O", "-", "-T", "1", "localhost"]
