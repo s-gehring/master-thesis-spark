@@ -28,10 +28,10 @@ echo "Moving JAR file..."
 cp target/shared-uima-benchmark-0.0.1-SNAPSHOT.jar ../master-thesis-spark/jars
 cd ../master-thesis-spark
 
-echo "Building shared-uima-processor Docker image..."
-docker-compose -f compose-1m2s.yaml build \
-1> ${LOGS}/shared-uima-processor-docker.stdout.log \
-2> ${LOGS}/shared-uima-processor-docker.stderr.log
+#echo "Building shared-uima-processor Docker image..."
+#docker-compose -f compose-1m2s.yaml build \
+#1> ${LOGS}/shared-uima-processor-docker.stdout.log \
+#2> ${LOGS}/shared-uima-processor-docker.stderr.log
 
 echo "Building UIMA-AS project..."
 cd ../master-thesis-uimaas/LeoDeployment
@@ -42,11 +42,11 @@ mvn clean install \
 echo "Moving JAR file..."
 cp target/shared-uima-as-0.0.1-SNAPSHOT.jar ../jars
 
-echo "Building UIMA-AS Docker image..."
+#echo "Building UIMA-AS Docker image..."
 cd ..
-docker-compose build \
-1> ${LOGS}/uima-as-docker.stdout.log \
-2> ${LOGS}/uima-as-docker.stderr.log
+#docker-compose build \
+#1> ${LOGS}/uima-as-docker.stdout.log \
+#2> ${LOGS}/uima-as-docker.stderr.log
 
 echo "Removing old containers (if applicable)."
 cd ../master-thesis-spark
