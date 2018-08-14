@@ -75,6 +75,7 @@ services:
     - "${FILESIZE_MAX:--1}"
     - "--pipelineId"
     - "${SUP_PIPELINE_ID:-0}"
+    - "${SUP_SKIP_COLLECTION:-}"
     volumes:
     - "${SUP_LOG_FILES:-~/logs/}submitter:/spark/logs"
     ports:
